@@ -1,0 +1,23 @@
+{
+  "name": "dlepera88-php/rauterex",
+  "version": "1.1",
+  "license": "MIT",
+  "authors": [
+    {"name": "Diego Lepera", "email": "dlepera88@gmail.com"}
+  ],
+  "require": {
+    "php": ">=7.1",
+    "phpunit/phpunit": "7.3.5",
+    "psr/http-message": "1.0.1"
+  },
+  "suggest": {
+    "dlepera88-php/dlx": "Micro-framework que utiliza a arquitetura Hexagonal (em desenvolvimento)",
+    "dlepera88-php/painel-dlx": "Painel de administração",
+    "dlepera88-php/vilex": "Controlador de views"
+  },
+  "autoload": {
+    "psr-4": {
+      "RautereX\\": "src/"
+    }
+  }
+}
