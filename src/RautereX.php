@@ -28,15 +28,19 @@ namespace RautereX;
 /**
  * Class RautereX
  * @package RautereX
- * @method get(string $url, array $rota)
- * @method post(string $url, array $rota)
- * @method put(string $url, array $rota)
- * @method delete(string $url, array $rota)
  */
 class RautereX
 {
     /** @var array */
     private $rotas = [];
+
+    /**
+     * @return array
+     */
+    public function getRotas(): array
+    {
+        return $this->rotas;
+    }
 
     public function __call($name, $arguments)
     {
@@ -50,15 +54,70 @@ class RautereX
      * @param array $rota
      * @param string $method
      */
-    private function add(string $url, array $rota, string $method = 'get'): Rota
+    public function add(string $url, array $rota, string $method = 'get'): Rota
     {
         $rota = (new Rota())
             ->setUrl($url)
             ->setControle($rota[0])
             ->setAcao($rota[1]);
 
-        $this->rotas[$method] = [$rota];
-
+        $this->rotas[$method][strtolower($url)] = $rota;
         return current($this->rotas[$method]);
+    }
+
+    /**
+     * Adicionar uma rota no para ser usada com o REQUEST_METHOD GET
+     * @param string $url
+     * @param array $rota
+     * @return Rota
+     */
+    public function get(string $url, array $rota): Rota
+    {
+        return $this->add($url, $rota, 'get');
+    }
+
+    /**
+     * Adicionar uma rota no para ser usada com o REQUEST_METHOD POST
+     * @param string $url
+     * @param array $rota
+     * @return Rota
+     */
+    public function post(string $url, array $rota): Rota
+    {
+        return $this->add($url, $rota, 'post');
+    }
+
+    /**
+     * Adicionar uma rota no para ser usada com o REQUEST_METHOD PUT
+     * @param string $url
+     * @param array $rota
+     * @return Rota
+     */
+    public function put(string $url, array $rota): Rota
+    {
+        return $this->add($url, $rota, 'put');
+    }
+
+    /**
+     * Adicionar uma rota no para ser usada com o REQUEST_METHOD DELETE
+     * @param string $url
+     * @param array $rota
+     * @return Rota
+     */
+    public function delete(string $url, array $rota): Rota
+    {
+        return $this->add($url, $rota, 'delete');
+    }
+
+    /**
+     * Todas as rotas de um método específico.
+     * @param string $method
+     * @return array|null
+     */
+    public function getRotasByMethod(string $method): ?array
+    {
+        return !array_key_exists(strtolower($method), $this->rotas)
+            ? null
+            : $this->rotas[$method];
     }
 }
