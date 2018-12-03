@@ -38,7 +38,7 @@ class Rota
     /** @var string */
     private $acao;
     /** @var array */
-    private $middlewares;
+    private $middlewares = [];
 
     /**
      * @return string
@@ -125,12 +125,21 @@ class Rota
     }
 
     /**
+     * Crar uma instância do controle.
+     * @return mixed
+     */
+    public function newControleIntance()
+    {
+        return new $this->controle;
+    }
+
+    /**
      * Executar os middleares dessa cota
      */
     public function executarMiddlewares()
     {
         foreach ($this->middlewares as $middleware) {
-            call_user_func_array([$middleware, 'executar'], []);
+            call_user_func_array([new $middleware, 'executar'], []);
         }
     }
 
@@ -142,6 +151,6 @@ class Rota
     public function executar(ServerRequestInterface $request)
     {
         $this->executarMiddlewares();
-        return call_user_func_array([$this->getControle(), $this->getAcao()], [$request]);
+        return call_user_func_array([$this->newControleIntance(), $this->getAcao()], [$request]);
     }
 }

@@ -25,6 +25,10 @@
 
 namespace RautereX;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use RautereX\Exceptions\RotaNaoEncontradaException;
+
 /**
  * Class RautereX
  * @package RautereX
@@ -110,14 +114,61 @@ class RautereX
     }
 
     /**
-     * Todas as rotas de um método específico.
+     * Todas as rotas de um mï¿½todo especï¿½fico.
      * @param string $method
      * @return array|null
      */
-    public function getRotasByMethod(string $method): ?array
+    public function getRotasByMethod(string $method = 'get'): ?array
     {
         return !array_key_exists(strtolower($method), $this->rotas)
             ? null
             : $this->rotas[$method];
+    }
+
+    /**
+     * Encontrar uma determinada rota pela sua URL.
+     * @param string $url
+     * @param string $method
+     * @return null|Rota
+     */
+    public function findRotaByUrl(string $url, string $method = 'get'): ?Rota
+    {
+        if (!$this->existsRota($url, $method)) {
+            return null;
+        }
+
+        return $this->rotas[$method][strtolower($url)];
+    }
+
+    /**
+     * Verifica se a rota existe.
+     * @param string $url
+     * @param string $method
+     * @return bool
+     */
+    private function existsRota(string $url, string $method = 'post'): bool
+    {
+        return array_key_exists($method, $this->rotas) && array_key_exists($url, $this->rotas[$method]);
+    }
+
+    /**
+     * Executar determinada rota.
+     * @param string $url
+     * @param string $method
+     * @return ResponseInterface
+     * @throws RotaNaoEncontradaException
+     */
+    public function executarRota(
+        string $url,
+        ServerRequestInterface $request,
+        string $method = 'get'
+    ): ResponseInterface {
+        $rota = $this->findRotaByUrl($url, strtolower($method));
+
+        if (is_null($rota)) {
+            throw new RotaNaoEncontradaException($url);
+        }
+
+        return $rota->executar($request);
     }
 }

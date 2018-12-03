@@ -10,6 +10,8 @@ namespace Tests;
 
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use RautereX\Exceptions\RotaNaoEncontradaException;
 use RautereX\RautereX;
 use RautereX\Rota;
 
@@ -65,5 +67,50 @@ class RautereXTest extends TestCase
         $this->assertArrayHasKey('delete', $rauter_x->getRotas());
         $this->assertCount(1, $rauter_x->getRotasByMethod('delete'));
         $this->assertTrue(array_key_exists('/index', $rotas_delete));
+    }
+
+    public function test_inclusao_rotas_com_middleares()
+    {
+        $rauter_x = new RautereX();
+        $rauter_x
+            ->get('/index', [RautereX::class, 'add'])
+            ->middlewares(
+                new ExemploMiddleware(),
+                new ExemploMiddleware()
+            );
+
+        $rota_adicionada = $rauter_x->findRotaByUrl('/index', 'get');
+
+        $this->assertInstanceOf(Rota::class, $rota_adicionada);
+        $this->assertEquals('/index', $rota_adicionada->getUrl());
+        $this->assertEquals(RautereX::class, $rota_adicionada->getControle());
+        $this->assertEquals('add', $rota_adicionada->getAcao());
+        $this->assertCount(2, $rota_adicionada->getMiddlewares());
+    }
+
+    /**
+     * @throws \RautereX\Exceptions\RotaNaoEncontradaException
+     */
+    public function test_executarRota_com_rota_invalida()
+    {
+        $this->expectException(RotaNaoEncontradaException::class);
+
+        $rauter_x = new RautereX();
+        $rauter_x->executarRota('/index', new ExemploServerRequest(), 'get');
+    }
+
+    /**
+     * @throws RotaNaoEncontradaException
+     */
+    public function test_executarRota_com_rota_valida()
+    {
+        $rauter_x = new RautereX();
+        $rauter_x
+            ->get('/index', [ExemploController::class, 'executar'])
+            ->middlewares(new ExemploMiddleware());
+
+        $response = $rauter_x->executarRota('/index', new ExemploServerRequest(), 'get');
+
+        $this->assertInstanceOf(ResponseInterface::class, $response);
     }
 }
