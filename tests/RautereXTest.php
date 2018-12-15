@@ -9,6 +9,8 @@
 namespace Tests;
 
 
+use League\Container\Container;
+use League\Container\ReflectionContainer;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use RautereX\Exceptions\RotaNaoEncontradaException;
@@ -90,6 +92,7 @@ class RautereXTest extends TestCase
 
     /**
      * @throws \RautereX\Exceptions\RotaNaoEncontradaException
+     * @throws \ReflectionException
      */
     public function test_executarRota_com_rota_invalida()
     {
@@ -101,6 +104,7 @@ class RautereXTest extends TestCase
 
     /**
      * @throws RotaNaoEncontradaException
+     * @throws \ReflectionException
      */
     public function test_executarRota_com_rota_valida()
     {
@@ -111,6 +115,25 @@ class RautereXTest extends TestCase
 
         $response = $rauter_x->executarRota('/index', new ExemploServerRequest(), 'get');
 
+        $this->assertInstanceOf(ResponseInterface::class, $response);
+    }
+
+    /**
+     * @throws RotaNaoEncontradaException
+     * @throws \ReflectionException
+     */
+    public function test_create_com_container()
+    {
+        $container = new Container();
+        $container->delegate(new ReflectionContainer());
+
+        $rauter_x = new RautereX($container);
+        $rauter_x->get('/index', [ExemploComDependenciasController::class, 'executar']);
+
+        // Se a rota for executada corretamente, significa que funcionou, pois o controller ExemploComDependenciasController
+        // tem dependência no seu constructor. Se tentar instanciar o controller sem a dependência, o PHP lança uma
+        // exception
+        $response = $rauter_x->executarRota('/index', new ExemploServerRequest(), 'get');
         $this->assertInstanceOf(ResponseInterface::class, $response);
     }
 }

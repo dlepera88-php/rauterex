@@ -25,8 +25,6 @@
 
 namespace RautereX;
 
-
-use Psr\Http\Message\ServerRequestInterface;
 use RautereX\Contracts\MiddlewareInterface;
 
 class Rota
@@ -122,35 +120,5 @@ class Rota
         }
 
         return $this;
-    }
-
-    /**
-     * Crar uma instância do controle.
-     * @return mixed
-     */
-    public function newControleIntance()
-    {
-        return new $this->controle;
-    }
-
-    /**
-     * Executar os middleares dessa cota
-     */
-    public function executarMiddlewares()
-    {
-        foreach ($this->middlewares as $middleware) {
-            call_user_func_array([new $middleware, 'executar'], []);
-        }
-    }
-
-    /**
-     * Executar o controle referente a essa rota.
-     * @param ServerRequestInterface $request
-     * @return mixed
-     */
-    public function executar(ServerRequestInterface $request)
-    {
-        $this->executarMiddlewares();
-        return call_user_func_array([$this->newControleIntance(), $this->getAcao()], [$request]);
     }
 }
