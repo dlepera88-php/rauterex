@@ -222,7 +222,7 @@ class RautereX
      */
     public function executarRota(
         string $url,
-        ServerRequestInterface $request,
+        ?ServerRequestInterface $request = null,
         string $method = 'get'
     ): ResponseInterface {
         $rota = $this->findRotaByUrl($url, strtolower($method));
