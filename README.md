@@ -12,11 +12,15 @@ Para faclitar, o **RautereX** permite passar uma ServerRequestInterface como par
 Uso básico
 --
 
-```
+```php
 <?php
-use RautereX;
+use RautereX\RautereX;
 
-$rauter_x = new RautereX($container);
+class AlgumaClasse {
+    
+}
+
+$rauter_x = new RautereX();
 $rauter_x->get(
     '/index',
     [AlgumaClasse::class, 'index']
@@ -62,4 +66,4 @@ $rauter_x->get(
     [AlgumaClasse::class, 'index']
 ); 
 ```
-- RequestServerInterface não é mais um parâmetro origatório.
+- `RequestServerInterface` não é mais um parâmetro origatório.
