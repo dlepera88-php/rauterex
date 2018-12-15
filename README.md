@@ -34,11 +34,24 @@ v1.1
 - Adicionado suporte para injeção de dependências.
 Obs: Por enquanto está sendo usado o container do League Router e é o único suportado.
 
-```
+```php
 <?php
 use League\Container\Container;
 use League\Container\ReflectionContainer;
-use RautereX;
+use RautereX\RautereX;
+
+class AlgumaClasse {
+    /** @var OutraClasse */
+    private $alguma_coisa;
+   
+    public function __construct(OutraClasse $outra_classe) {
+        $this->alguma_coisa = $outra_classe;
+    }
+}
+
+class OutraClasse {
+    
+}
 
 $container = new Container;
 $container->delegate(new ReflectionContainer);
