@@ -90,6 +90,24 @@ class RautereXTest extends TestCase
         $this->assertCount(2, $rota_adicionada->getMiddlewares());
     }
 
+    public function test_inclusao_varias_rotas_com_middleware()
+    {
+        $rauter_x = new RautereX();
+        $rauter_x
+            ->get('/index', [RautereX::class, 'add'])
+            ->middlewares(new ExemploMiddleware());
+
+        $rauter_x
+            ->get('/index2', [RautereX::class, 'add'])
+            ->middlewares(new ExemploMiddleware());
+
+        $rota1 = $rauter_x->findRotaByUrl('/index', 'get');
+        $rota2 = $rauter_x->findRotaByUrl('/index2', 'get');
+
+        $this->assertCount(1, $rota1->getMiddlewares());
+        $this->assertCount(1, $rota2->getMiddlewares());
+    }
+
     /**
      * @throws \RautereX\Exceptions\RotaNaoEncontradaException
      * @throws \ReflectionException

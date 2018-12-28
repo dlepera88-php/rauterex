@@ -79,7 +79,7 @@ class RautereX
             ->setAcao($rota[1]);
 
         $this->rotas[$method][strtolower($url)] = $rota;
-        return current($this->rotas[$method]);
+        return $rota;
     }
 
     /**
