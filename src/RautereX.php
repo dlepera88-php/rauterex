@@ -127,7 +127,7 @@ class RautereX
     }
 
     /**
-     * Todas as rotas de um m�todo espec�fico.
+     * Todas as rotas de um método específico.
      * @param string $method
      * @return array|null
      */
@@ -172,14 +172,12 @@ class RautereX
         /** @var MiddlewareInterface $middleware */
         foreach ($middlewares as $middleware) {
             if ($middleware instanceof MiddlewareInterface) {
-                if ($this->container instanceof Container) {
-                    $this->executarViaContainer(
-                        get_class($middleware),
-                        'executar'
-                    );
-                } else {
-                    $middleware->executar();
-                }
+                $middleware->executar();
+            } else {
+                $this->executarViaContainer(
+                    $middleware,
+                    'executar'
+                );
             }
         }
     }
