@@ -25,8 +25,10 @@
 
 namespace RautereX;
 
+use League\Container\Container;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RautereX\Contracts\MiddlewareInterface;
 use RautereX\Exceptions\RotaNaoEncontradaException;
 
 /**
@@ -37,6 +39,8 @@ class RautereX
 {
     /** @var array */
     private $rotas = [];
+    /** @var Container */
+    private $container;
 
     /**
      * @return array
@@ -44,6 +48,15 @@ class RautereX
     public function getRotas(): array
     {
         return $this->rotas;
+    }
+
+    /**
+     * RautereX constructor.
+     * @param Container|null $container
+     */
+    public function __construct(?Container $container = null)
+    {
+        $this->container = $container;
     }
 
     public function __call($name, $arguments)
@@ -66,7 +79,7 @@ class RautereX
             ->setAcao($rota[1]);
 
         $this->rotas[$method][strtolower($url)] = $rota;
-        return current($this->rotas[$method]);
+        return $rota;
     }
 
     /**
@@ -114,7 +127,7 @@ class RautereX
     }
 
     /**
-     * Todas as rotas de um m�todo espec�fico.
+     * Todas as rotas de um método específico.
      * @param string $method
      * @return array|null
      */
@@ -152,15 +165,62 @@ class RautereX
     }
 
     /**
+     * @param array $middlewares
+     */
+    public function executarMiddlewares(array $middlewares = [])
+    {
+        /** @var MiddlewareInterface $middleware */
+        foreach ($middlewares as $middleware) {
+            if ($middleware instanceof MiddlewareInterface) {
+                $middleware->executar();
+            } else {
+                $this->executarViaContainer(
+                    $middleware,
+                    'executar'
+                );
+            }
+        }
+    }
+
+    /**
+     * Obtém uma instância da classe via relection e executa determinado método
+     * @param string $classe Nome da classe a ser executada
+     * @param string $metodo Nome do método a ser executado
+     * @param array $params Array contendo os parâmetros a serem passados para o MÉTODO
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    public function executarViaReflection(string $classe, string $metodo, array $params = [])
+    {
+        $rfx_classe = new \ReflectionClass($classe);
+        $inst_classe = $rfx_classe->newInstance();
+        return $inst_classe->{$metodo}(...$params);
+    }
+
+    /**
+     * Obtém uma intância da classe via container e executa determinado método
+     * @param string $classe Nome da classe a ser executada
+     * @param string $metodo Nome do método a ser executado
+     * @param array $params Array contendo os parâmetros a serem passados para o MÉTODO
+     * @return mixed
+     */
+    public function executarViaContainer(string $classe, string $metodo, array $params = [])
+    {
+        $instancia = $this->container->get($classe);
+        return $instancia->{$metodo}(...$params);
+    }
+
+    /**
      * Executar determinada rota.
      * @param string $url
      * @param string $method
      * @return ResponseInterface
      * @throws RotaNaoEncontradaException
+     * @throws \ReflectionException
      */
     public function executarRota(
         string $url,
-        ServerRequestInterface $request,
+        ?ServerRequestInterface &$request = null,
         string $method = 'get'
     ): ResponseInterface {
         $rota = $this->findRotaByUrl($url, strtolower($method));
@@ -169,6 +229,20 @@ class RautereX
             throw new RotaNaoEncontradaException($url);
         }
 
-        return $rota->executar($request);
+        $this->executarMiddlewares($rota->getMiddlewares());
+
+        if ($this->container instanceof Container) {
+            return $this->executarViaContainer(
+                $rota->getControle(),
+                $rota->getAcao(),
+                [$request]
+            );
+        }
+
+        return $this->executarViaReflection(
+            $rota->getControle(),
+            $rota->getAcao(),
+            [$request]
+        );
     }
 }

@@ -9,6 +9,8 @@
 namespace Tests;
 
 
+use League\Container\Container;
+use League\Container\ReflectionContainer;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use RautereX\Exceptions\RotaNaoEncontradaException;
@@ -88,8 +90,27 @@ class RautereXTest extends TestCase
         $this->assertCount(2, $rota_adicionada->getMiddlewares());
     }
 
+    public function test_inclusao_varias_rotas_com_middleware()
+    {
+        $rauter_x = new RautereX();
+        $rauter_x
+            ->get('/index', [RautereX::class, 'add'])
+            ->middlewares(new ExemploMiddleware());
+
+        $rauter_x
+            ->get('/index2', [RautereX::class, 'add'])
+            ->middlewares(new ExemploMiddleware());
+
+        $rota1 = $rauter_x->findRotaByUrl('/index', 'get');
+        $rota2 = $rauter_x->findRotaByUrl('/index2', 'get');
+
+        $this->assertCount(1, $rota1->getMiddlewares());
+        $this->assertCount(1, $rota2->getMiddlewares());
+    }
+
     /**
      * @throws \RautereX\Exceptions\RotaNaoEncontradaException
+     * @throws \ReflectionException
      */
     public function test_executarRota_com_rota_invalida()
     {
@@ -101,6 +122,7 @@ class RautereXTest extends TestCase
 
     /**
      * @throws RotaNaoEncontradaException
+     * @throws \ReflectionException
      */
     public function test_executarRota_com_rota_valida()
     {
@@ -111,6 +133,25 @@ class RautereXTest extends TestCase
 
         $response = $rauter_x->executarRota('/index', new ExemploServerRequest(), 'get');
 
+        $this->assertInstanceOf(ResponseInterface::class, $response);
+    }
+
+    /**
+     * @throws RotaNaoEncontradaException
+     * @throws \ReflectionException
+     */
+    public function test_create_com_container()
+    {
+        $container = new Container();
+        $container->delegate(new ReflectionContainer());
+
+        $rauter_x = new RautereX($container);
+        $rauter_x->get('/index', [ExemploComDependenciasController::class, 'executar']);
+
+        // Se a rota for executada corretamente, significa que funcionou, pois o controller ExemploComDependenciasController
+        // tem dependência no seu constructor. Se tentar instanciar o controller sem a dependência, o PHP lança uma
+        // exception
+        $response = $rauter_x->executarRota('/index', new ExemploServerRequest(), 'get');
         $this->assertInstanceOf(ResponseInterface::class, $response);
     }
 }
